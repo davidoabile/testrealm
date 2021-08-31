@@ -1,0 +1,99 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type ErrorModel {
+  code: String!
+  message: String!
+}
+
+type CreateLabelResponse {
+  success: Boolean!
+  status: String!
+  code: Int!
+  errors: [ErrorModel!]
+  data: String
+}
+
+type Query {
+  hello: String!
+  helloFastway: String!
+  fastWayEstimates(orders: OrderModel!): String!
+  getStarTrackEstimates(orders: OrderModel!): String!
+  getAuspostEstimates(orders: OrderModel!): String!
+}
+
+input OrderModel {
+  """System generated order id"""
+  id: String!
+
+  """Order notes - shipping notes """
+  note: String!
+
+  """total weight for the order"""
+  total_weight: Float = 0
+
+  """total cubic in meters for the order"""
+  total_cubic: Float = 0
+
+  """Store this order belongs to"""
+  store_id: String!
+
+  """Order total"""
+  total: Float!
+
+  """
+  Order ref e.g. order number, custom order number - if missing order.id will be used
+  """
+  reference: String
+
+  """Number of items in an order"""
+  total_items: Int!
+
+  """Insurance changed to customers if applicable"""
+  insurance: Float
+
+  """Company where the order is dispatched from"""
+  store_address: AddressModel!
+
+  """Delivery address"""
+  customer_address: ShippingAddress!
+
+  """Receiver id - e.g. cusotmer number"""
+  receiver_id: String
+}
+
+input AddressModel {
+  address1: String!
+  company: String!
+  address2: String
+  state: String!
+  postcode: String!
+  suburb: String!
+  phone: String!
+}
+
+input ShippingAddress {
+  stateName: String!
+  postcode: String!
+  street: String!
+  street2: String
+  suburb: String!
+  email: String
+  telephone: String
+  countryCode: String
+  company: String
+  name: String!
+}
+
+type Mutation {
+  CreateFastWayLabel(params: DataOption!, orders: OrderModel!): CreateLabelResponse!
+  CreateStarTrackLabel(params: DataOption!, orders: OrderModel!): Boolean!
+  CreateAuspostLabel(params: DataOption!, orders: OrderModel!): Boolean!
+}
+
+input DataOption {
+  price: Float!
+  qty: Int!
+  type: String
+}
