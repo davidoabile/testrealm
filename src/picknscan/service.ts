@@ -9,8 +9,8 @@ import { PickNscanRealmAdapter } from 'src/PickNscanRealmAdapter';
 export class Service extends PickNScan {
   public realmInstance: Realm
 
-  async load(partition: string, user?: Realm.User<Realm.DefaultFunctionsFactory, any>) {
-    this.realmInstance = await PickNscanRealmAdapter(partition, user ?? this.user)
+  async load(user?: Realm.User<Realm.DefaultFunctionsFactory, any>) {
+    this.realmInstance = await PickNscanRealmAdapter(user ?? this.user)
   }
 
 }

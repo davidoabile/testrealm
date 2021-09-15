@@ -1,13 +1,12 @@
 
 // https://docs.mongodb.com/realm/node/relationships
 import * as Realm from 'realm';
-export const PickNscanRealmAdapter = async (partition: string, user: Realm.User<Realm.DefaultFunctionsFactory, any>) => {
+export const PickNscanRealmAdapter = async (user: Realm.User<Realm.DefaultFunctionsFactory, any>) => {
   try {
     return await Realm.open({
-      path: `realm_stores/${partition.replace('=', "_")}`,
       sync: {
         user: user!,
-        partitionValue: partition,
+        partitionValue: 'PUBLIC',
         // The behavior to use when a realm file already exists locally,
         // i.e. you have previously opened the realm.
         existingRealmFileBehavior: {

@@ -14,6 +14,8 @@ import * as stream from 'stream';
 import { promisify } from 'util';
 import { createWriteStream } from 'fs';
 import { fromPath } from "pdf2pic";
+import { Carriers, DeleteConsignment } from './models/until';
+import { URLSearchParams } from 'url';
 
 //import { RecipeSchema } from '../shopper/models/recipe.model';
 const app = new Realm.App({ id: REALM_APP_ID });
@@ -63,6 +65,7 @@ export abstract class PickNScan {
     this.handleLogin();
   }
 
+  async setup() { console.log('called - setup') }
   async handleLogin() {
     try {
       const credentials = Realm.Credentials.serverApiKey(REALM_API_KEY);
@@ -71,15 +74,17 @@ export abstract class PickNScan {
     } catch (err) {
       console.error("Failed to log in:", err)
     }
+
   }
 
-  prepareOrder(order: OrderModel, headers?: Headers) {
+  async prepareOrder(order: OrderModel, headers?: Headers) {
     this.order = order;
     if (headers) {
       this.config = headers
     }
     this.shippingAddress = order.customer_address;
     this.senderDetails = order.store_address;
+    await this.setup();
     return this;
   }
 
@@ -98,13 +103,14 @@ export abstract class PickNScan {
       url,
     }
     if (method == 'POST') {
-      params.data = options
+      params.data = JSON.stringify(options)
     }
 
     if (headers) {
       params.headers = headers
     }
-    return (await axios(params)).data;
+    const result = await axios(params);
+    return result.data ?? result;
   }
 
   async download(url: string, out_path: string) {
@@ -119,6 +125,13 @@ export abstract class PickNScan {
       response.data.pipe(writer);
       return finished(writer);
     });
+  }
+
+  base64_encode(str: string) {
+    return Buffer.from(str).toString('base64')
+  }
+  base64_decode(strm: string) {
+    return Buffer.from(strm, 'base64').toString('ascii')
   }
 
   async pdfToJpg(source_pdf: string, saveFilename: string) {
@@ -140,6 +153,12 @@ export abstract class PickNScan {
     });
   }
 
+  getPath() {
+    return fromPath(`${__dirname}/../`)
+  }
+
+
+
   async toZpl() {
     // Synchronous pngjs usage
     const fs = require('fs');
@@ -154,5 +173,46 @@ export abstract class PickNScan {
     // res.rowlen is the GRF row length.
     // res.z64 is the Z64 encoded string.
     return `^GFA,${res.length},${res.length},${res.rowlen},${res.z64}`;
+  }
+
+
+  async beforeCreate() {
+    /**
+     * @var ShippingCharges $model
+     */
+
+
+
+    const piplines = [
+      {
+        $match: {
+          order_ref_no: 300664513, //this.order.id,
+          is_deleted: false
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          method: 1,
+          shipping_id: 1,
+          con_sig_no: 1
+        }
+      }
+    ];
+    try {
+      await this.handleLogin()
+      const mongodb = this.user.mongoClient("mongodb-atlas");
+      const manifest = await mongodb.db("warehouse").collection("shipping_log").aggregate(piplines);
+      if (manifest.length > 0) {
+        this.deleteConsignment(manifest[0])
+      }
+    } catch (err) {
+      console.log(err)
+    }
+
+  }
+
+  deleteConsignment(params: DeleteConsignment) {
+
   }
 }

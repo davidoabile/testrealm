@@ -15,13 +15,15 @@ export class AuspostResolver {
 
 
   @Query(returns => String)
-  getAuspostEstimates(@Args('orders') order: OrderModel) {
-    this.service.prepareOrder(order).getPrice()
+  async getAuspostEstimates(@Args('orders') order: OrderModel) {
+    await this.service.prepareOrder(order)
+    await this.service.getPrice()
     return "hi"
   }
   @Mutation(returns => Boolean)
-  CreateAuspostLabel(@Args('orders') order: OrderModel, @Args('params') params: DataOption, @HeaderParams() headers: Headers) {
-    this.service.prepareOrder(order, headers).createLabel(params)
+  async CreateAuspostLabel(@Args('orders') order: OrderModel, @Args('params') params: DataOption, @HeaderParams() headers: Headers) {
+    await this.service.prepareOrder(order, headers)
+    await this.service.createLabel(params)
     return true
   }
 

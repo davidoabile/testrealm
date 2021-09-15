@@ -38,8 +38,8 @@ export class Service extends PickNScan {
   protected productName = '';
   protected identifier = IDENTIFIER;
 
-  async load(partition: string, user?: Realm.User<Realm.DefaultFunctionsFactory, any>) {
-    this.realmInstance = await PickNscanRealmAdapter(partition, user ?? this.user)
+  async load(user?: Realm.User<Realm.DefaultFunctionsFactory, any>) {
+    this.realmInstance = await PickNscanRealmAdapter(user ?? this.user)
   }
   getUrl(url: string) {
     return `${this.apiUrl}${url}api_key=${this.config.fastway_api_key}`;

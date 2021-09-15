@@ -26,13 +26,15 @@ export class FastwayResolver {
 
 
   @Query(returns => String)
-  fastWayEstimates(@Args('orders') order: OrderModel) {
-    this.service.prepareOrder(order).getPrice()
+  async fastWayEstimates(@Args('orders') order: OrderModel) {
+    await this.service.prepareOrder(order)
+    await this.service.getPrice()
     return "hi"
   }
   @Mutation(returns => CreateLabelResponse)
-  CreateFastWayLabel(@Args('orders') order: OrderModel, @Args('params') params: DataOption, @HeaderParams() headers: Headers) {
-    return this.service.prepareOrder(order, headers).createLabel(params)
+  async CreateFastWayLabel(@Args('orders') order: OrderModel, @Args('params') params: DataOption, @HeaderParams() headers: Headers) {
+    await this.service.prepareOrder(order, headers)
+    return await this.service.createLabel(params)
   }
 
   // @Mutation(returns => NoDataAjaxResponse)
