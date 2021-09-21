@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 //import { NotFoundException } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { CreateLabelResponse } from 'src/common';
+import { CreateLabelResponse, NoDataAjaxResponse } from 'src/common';
 import { HeaderParams, Headers } from 'src/headers.decorators.params';
 import { OrderModel } from 'src/models/order';
 import { DataOption } from 'src/picknscan/dto/data.params';
@@ -30,11 +30,17 @@ export class StarTrackResolver {
   async CreateStarTrackLabel(@Args('orders') order: OrderModel, @Args('params') params: DataOption, @HeaderParams() headers: Headers) {
     await this.service.load();
     await this.service.prepareOrder(order, headers)
-    await this.service.createLabel(params)
+    const res = await this.service.createLabel(params)
     this.service.realmInstance.close()
-    return true
+    return res
   }
-
+  @Mutation(returns => NoDataAjaxResponse)
+  async createShipment(@HeaderParams() headers: Headers) {
+    await this.service.prepareOrder(new OrderModel(), headers)
+    await this.service.load();
+    const res = await this.service.createShipment()
+    return res
+  }
   // @Mutation(returns => NoDataAjaxResponse)
   // async CreateStore(@Args('storeArgs') storeArgs: CreateStoreInput): Promise<NoDataAjaxResponse> {
   //   return await this.service.create_store(storeArgs);

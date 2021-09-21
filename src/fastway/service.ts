@@ -71,9 +71,9 @@ export class Service extends PickNScan {
       if (data.type) {
         this.packaging = Number(data.type);
       }
-      const res = await this.createConnote(data);
+      await this.createConnote(data);
       response.ok();
-      response.data = await this.getPdf()
+      response.zpl.push(await this.getPdf())
       return response
 
     } catch (err) {

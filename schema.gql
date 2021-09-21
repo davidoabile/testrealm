@@ -7,12 +7,23 @@ type ErrorModel {
   message: String!
 }
 
+type NoDataAjaxResponse {
+  success: Boolean!
+  status: String!
+  code: Int!
+  errors: [ErrorModel!]
+}
+
 type CreateLabelResponse {
   success: Boolean!
   status: String!
   code: Int!
   errors: [ErrorModel!]
-  data: String
+  zpl: [String!]!
+  trackingNumber: String
+  trackingNumbers: [String!]!
+  connote: String
+  connotes: [String!]!
 }
 
 type Query {
@@ -89,6 +100,7 @@ input ShippingAddress {
 type Mutation {
   CreateFastWayLabel(params: DataOption!, orders: OrderModel!): CreateLabelResponse!
   CreateStarTrackLabel(params: DataOption!, orders: OrderModel!): CreateLabelResponse!
+  createShipment: NoDataAjaxResponse!
   CreateAuspostLabel(params: DataOption!, orders: OrderModel!): Boolean!
 }
 

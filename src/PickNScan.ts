@@ -1,7 +1,7 @@
 
 // https://docs.mongodb.com/realm/node/relationships
 import * as Realm from 'realm';
-import { REALM_API_KEY, REALM_APP_ID } from './constants';
+import { REALM_API_KEY, REALM_APP_ID, STARTRACK_CONSIGNMENTS } from './constants';
 import { AddressModel, ShippingAddress } from './models/address';
 import { OrderLines } from './models/order.lines';
 import axios from 'axios'
@@ -16,6 +16,7 @@ import { createWriteStream } from 'fs';
 import { fromPath } from "pdf2pic";
 import { Carriers, DeleteConsignment } from './models/until';
 import { URLSearchParams } from 'url';
+import { PickNscanRealmAdapter } from 'src/PickNscanRealmAdapter';
 
 //import { RecipeSchema } from '../shopper/models/recipe.model';
 const app = new Realm.App({ id: REALM_APP_ID });
@@ -59,10 +60,14 @@ export abstract class PickNScan {
   protected senderDetails = new AddressModel;
 
   protected shippingAddress = new ShippingAddress;
-
+  public realmInstance: Realm
 
   constructor() {
     this.handleLogin();
+  }
+
+  async load(user?: Realm.User<Realm.DefaultFunctionsFactory, any>) {
+    this.realmInstance = await PickNscanRealmAdapter(user ?? this.user)
   }
 
   async setup() { console.log('called - setup') }
@@ -181,34 +186,41 @@ export abstract class PickNScan {
      * @var ShippingCharges $model
      */
 
+    this.realmInstance.write(() => {
+      const manifest = this.realmInstance.objects(STARTRACK_CONSIGNMENTS).filtered("order_ref_no == $0 AND is_deleted == false", this.order.id);
+      manifest.map(i => {
+        const item = i.toJSON();
+        this.realmInstance.delete(i)
+        this.deleteConsignment(item)
+      })
+    })
 
-
-    const piplines = [
-      {
-        $match: {
-          order_ref_no: 300664513, //this.order.id,
-          is_deleted: false
-        }
-      },
-      {
-        $project: {
-          _id: 1,
-          method: 1,
-          shipping_id: 1,
-          con_sig_no: 1
-        }
-      }
-    ];
-    try {
-      await this.handleLogin()
-      const mongodb = this.user.mongoClient("mongodb-atlas");
-      const manifest = await mongodb.db("warehouse").collection("shipping_log").aggregate(piplines);
-      if (manifest.length > 0) {
-        this.deleteConsignment(manifest[0])
-      }
-    } catch (err) {
-      console.log(err)
-    }
+    // const piplines = [
+    //   {
+    //     $match: {
+    //       order_ref_no: this.order.id,
+    //       is_deleted: false
+    //     }
+    //   },
+    //   {
+    //     $project: {
+    //       _id: 1,
+    //       method: 1,
+    //       shipping_id: 1,
+    //       con_sig_no: 1
+    //     }
+    //   }
+    // ];
+    // try {
+    //   await this.handleLogin()
+    //   const mongodb = this.user.mongoClient("mongodb-atlas");
+    //   const manifest = await mongodb.db("warehouse").collection("shipping_log").aggregate(piplines);
+    //   if (manifest.length > 0) {
+    //     this.deleteConsignment(manifest[0])
+    //   }
+    // } catch (err) {
+    //   console.log(err)
+    // }
 
   }
 
