@@ -568,6 +568,9 @@ export class Service extends PickNScan {
           recordsCreated = true
           response.data.push(consignment.toJSON());
         }
+        if (this.productCode == this.serviceEXPCode) {
+          break;
+        }
       }
       if (recordsCreated) {
         const labels: any = {}
@@ -605,33 +608,36 @@ export class Service extends PickNScan {
 
 
   createConnLabel(con: any, qty: number) {
-    const con_id = con._id.getTimestamp().getTime().toString();
+    // const con_id = con._id.getTimestamp().getTime().toString();
     // conCollection.map((con: any) => {
-    let labelNumber = `${con['connoteNumber']}${this.productCode}9${con_id.slice(-4)}`;
+    let labelNumber = `${con['connoteNumber']}${this.productCode}9${this.genUniqueId().toString().slice(-4)}`;
     //$labelNumber = $con['connoteNumber'] . $this->starTrack->productCode . '9' . substr(str_pad($con['_key'], 4, '0', STR_PAD_LEFT), -4);
     //you can have the same con for express not for air
-    // if (this.productCode === this.serviceEXPCode) {
-    //   labelNumber = `${conCollection[0]['connoteNumber']}${this.productCode}9${conCollection[0]['_id'].substring(con['_id'].length - 4)}`;
-    // }
-    let altDefaultNumber = 1;
-    let prev = this.realmInstance.objects(LABEL_TABLE).sorted('_id', true).slice(0, 1);
-    let lastNumber = prev.length ? prev[0]['atl_number'] : 1
-    let atl = lastNumber < 99999999 ? lastNumber + 1 : altDefaultNumber;
-    let id = new ObjectId();
-    const data = {
-      _id: id,
-      'connoteNumber': con['connoteNumber'],
-      'labelNumber': labelNumber.substring(0, 20),
-      'con_id': con['_id'],
-      'unitType': this.getUnitType(),
-      'order_id': this.order.id,
-      'qty': qty,
-      'labelReferenceValue': this.order.reference,
-      'atl_number': atl.toString().padStart(8, '0'),
-      'instructions': this.createSpecialInstructions(con, id),
-      _partition_key: 'PUBLIC'
+    const items: any[] = []
+    for (let i = 1; i <= qty; i++) {
+      if (this.productCode === this.serviceEXPCode && qty > 1) {
+        labelNumber = `${con['connoteNumber']}${this.productCode}9${this.genUniqueId().toString().slice(-4)}`;
+      }
+      let altDefaultNumber = 1;
+      let prev = this.realmInstance.objects(LABEL_TABLE).sorted('_id', true).slice(0, 1);
+      let lastNumber = prev.length ? prev[0]['atl_number'] : 1
+      let atl = lastNumber < 99999999 ? lastNumber + 1 : altDefaultNumber;
+      let id = new ObjectId();
+      items.push({
+        _id: id,
+        'connoteNumber': con['connoteNumber'],
+        'labelNumber': labelNumber.substring(0, 20),
+        'con_id': con['_id'],
+        'unitType': this.getUnitType(),
+        'order_id': this.order.id,
+        'qty': qty,
+        'labelReferenceValue': this.order.reference,
+        'atl_number': atl.toString().padStart(8, '0'),
+        'instructions': this.createSpecialInstructions(con, id),
+        _partition_key: 'PUBLIC'
+      })
     }
-    return data
+    return items
 
   }
 
